@@ -20,7 +20,7 @@ func TestMergeEnvVars(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "duplicate names should fail with mergeValues false",
+			name: "duplicate names should fail with overwriteValues false",
 			args: args{
 				new: []corev1.EnvVar{
 					{Name: "TWO", Value: "twoValue"},
@@ -35,7 +35,7 @@ func TestMergeEnvVars(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "duplicate names should succeed with mergeValues true",
+			name: "duplicate names should succeed with overwriteValues true",
 			args: args{
 				new: []corev1.EnvVar{
 					{Name: "TWO", Value: "newTwoValue"},
@@ -53,7 +53,7 @@ func TestMergeEnvVars(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "non-duplicate should succeed with mergeValues false",
+			name: "non-duplicate should succeed with overwriteValues false",
 			args: args{
 				new: []corev1.EnvVar{
 					{Name: "THREE", Value: "threeValue"},
@@ -74,7 +74,7 @@ func TestMergeEnvVars(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "non-duplicate should succeed with mergeValues true",
+			name: "non-duplicate should succeed with overwriteValues true",
 			args: args{
 				new: []corev1.EnvVar{
 					{Name: "THREE", Value: "threeValue"},
@@ -94,7 +94,49 @@ func TestMergeEnvVars(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "empty new should return into",
+			args: args{
+				new: []corev1.EnvVar{},
+				into: []corev1.EnvVar{
+					{Name: "ONE", Value: "oneValue"},
+					{Name: "TWO", Value: "twoValue"},
+				},
+				overwriteValues: true,
+			},
+			want: []corev1.EnvVar{
+				{Name: "ONE", Value: "oneValue"},
+				{Name: "TWO", Value: "twoValue"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty into should return new",
+			args: args{
+				new: []corev1.EnvVar{
+					{Name: "ONE", Value: "oneValue"},
+					{Name: "TWO", Value: "twoValue"},
+				},
+				into:            []corev1.EnvVar{},
+				overwriteValues: true,
+			},
+			want: []corev1.EnvVar{
+				{Name: "ONE", Value: "oneValue"},
+				{Name: "TWO", Value: "twoValue"},
+			},
+			wantErr: false,
+		}, {
+			name: "empty new and into should return empty",
+			args: args{
+				new:             []corev1.EnvVar{},
+				into:            []corev1.EnvVar{},
+				overwriteValues: true,
+			},
+			want:    []corev1.EnvVar{},
+			wantErr: false,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := MergeEnvVars(tt.args.new, tt.args.into, tt.args.overwriteValues)
